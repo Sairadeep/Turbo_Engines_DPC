@@ -1,0 +1,11 @@
+<device-admin package="com.weguard.turboengines">
+    <uses-policies>
+        <reset-password />
+        <disable-camera />
+        <disable-keyguard-features />
+        <encrypted-storage />
+        <expire-password />
+        <force-lock />
+        <set-global-proxy />
+    </uses-policies>
+</device-admin>
