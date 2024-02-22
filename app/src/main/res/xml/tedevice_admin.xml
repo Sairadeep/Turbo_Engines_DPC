@@ -1,4 +1,5 @@
-<device-admin package="com.weguard.turboengines">
+
+<device-admin package ="com.weguard.turboengines">
     <uses-policies>
         <reset-password />
         <disable-camera />
@@ -9,3 +10,4 @@
         <set-global-proxy />
     </uses-policies>
 </device-admin>
+
