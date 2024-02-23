@@ -3,8 +3,6 @@ package com.weguard.turboengines
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -111,10 +109,10 @@ fun TEDPC() {
         context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
     val componentName = ComponentName(context, TEAdminReceiver::class.java)
 //    val custom = ComponentName(context, MainActivity::class.java)
-    val filter = IntentFilter()
-    filter.addAction(Intent.ACTION_MAIN)
-    filter.addAction(Intent.CATEGORY_HOME)
-    filter.addAction(Intent.ACTION_DEFAULT)
+//    val filter = IntentFilter()
+//    filter.addAction(Intent.ACTION_MAIN)
+//    filter.addAction(Intent.CATEGORY_HOME)
+//    filter.addAction(Intent.ACTION_DEFAULT)
     Scaffold(
         topBar = {
             if (topAppBarState.value) {
