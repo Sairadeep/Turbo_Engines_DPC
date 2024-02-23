@@ -45,7 +45,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -98,6 +100,9 @@ fun TEDPC() {
         mutableStateOf(false)
     }
     val bottomBarState = remember { mutableStateOf(true) }
+    val iconSize = remember {
+        mutableIntStateOf(0)
+    }
     val appDrawerButtonState = remember { mutableStateOf(true) }
     val homeLauncherButtonState = remember { mutableStateOf(true) }
     val topAppBarState = remember { mutableStateOf(true) }
@@ -240,6 +245,7 @@ fun TEDPC() {
             homeLauncherButtonState,
             topAppBarState,
             bottomBarState,
+            iconSize,
             context,
             app
         )
@@ -255,9 +261,11 @@ private fun AppDrawer(
     homeLauncherButtonState: MutableState<Boolean>,
     topAppBarState: MutableState<Boolean>,
     bottomBarState: MutableState<Boolean>,
+    iconSize: MutableIntState,
     context: Context,
     app: List<AppInfo>
 ) {
+    val packageManager = context.packageManager
     if (bottomSheetStatus.value) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -278,8 +286,14 @@ private fun AppDrawer(
             containerColor = Color.Transparent
         ) {
             context.display?.mode?.toString()?.let { it1 -> Log.d("Current Mode", it1) }
+            if (packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)) {
+                Toast.makeText(context, "This is TV", Toast.LENGTH_SHORT).show()
+                iconSize.intValue = 200
+            } else {
+                iconSize.intValue = 80
+            }
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(205.dp),
+                columns = GridCells.Adaptive(iconSize.intValue.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalArrangement = Arrangement.Center
             ) {
