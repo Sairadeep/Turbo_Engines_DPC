@@ -412,7 +412,7 @@ class MainActivity : ComponentActivity() {
             overflow = TextOverflow.Ellipsis,
             softWrap = true,
             modifier = Modifier.fillMaxSize(),
-            color = Color.White,
+            color = Color.Black,
             fontWeight = FontWeight.Bold
         )
     }
