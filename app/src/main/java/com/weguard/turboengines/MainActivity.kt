@@ -64,6 +64,9 @@ import com.weguard.turboengines.ui.theme.TurboEnginesTheme
 
 class MainActivity : ComponentActivity() {
 
+//    var filter = IntentFilter()
+//    val receiver = MyBootReceiver()
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +82,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+//    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+//    override fun onStart() {
+//        filter.addAction(Intent.ACTION_REBOOT)
+//        this.registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+//        super.onStart()
+//    }
+//
+//    override fun onStop() {
+//        unregisterReceiver(receiver)
+//        super.onStop()
+//    }
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -252,7 +267,7 @@ class MainActivity : ComponentActivity() {
                                     Icon(
                                         Icons.Default.Home,
                                         contentDescription = "App Drawer",
-                                        tint = Color.Black,
+                                        tint = Color.White,
                                         modifier = Modifier.fillMaxSize()
                                     )
                                 }
@@ -268,7 +283,7 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.tree),
+                    painter = painterResource(id = R.drawable.te),
                     contentDescription = "",
                     Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds

@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission
         android:name="android.permission.INTERACT_ACROSS_PROFILES"
         tools:ignore="ProtectedPermissions" />
@@ -19,23 +18,21 @@
     <uses-feature
         android:name="android.software.leanback"
         android:required="false" />
-
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
     <application
         android:allowBackup="true"
-        android:banner="@mipmap/ic_launcher_round"
+        android:banner="@drawable/te"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/te"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/te"
         android:supportsRtl="true"
         android:theme="@style/Theme.TurboEngines"
         tools:targetApi="31">
-
         <receiver
             android:name=".TEAdminReceiver"
             android:enabled="true"
@@ -49,6 +46,7 @@
                 <action android:name="android.app.action.PROFILE_OWNER_CHANGED" />
                 <action android:name="android.app.action.DEVICE_OWNER_CHANGED" />
             </intent-filter>
+
             <meta-data
                 android:name="android.app.device_admin"
                 android:resource="@xml/tedevice_admin" />
@@ -60,6 +58,7 @@
             android:theme="@style/Theme.TurboEngines">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
