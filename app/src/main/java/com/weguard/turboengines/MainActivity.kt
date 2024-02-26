@@ -79,7 +79,8 @@ class MainActivity : ComponentActivity() {
             TurboEnginesTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     TEDPC()
@@ -100,6 +101,7 @@ class MainActivity : ComponentActivity() {
 //        super.onStop()
 //    }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Preview(showBackground = true)
     @Composable
@@ -144,7 +146,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 if (topAppBarState.value) {
-                    TopAppBar(
+                    TopAppBarMode(
                         devicePolicyManager,
                         context,
                         lockTaskStatus,
@@ -156,7 +158,7 @@ class MainActivity : ComponentActivity() {
             },
             bottomBar = {
                 if (bottomBarState.value) {
-                    BottomAppBar(
+                    BottomAppBarMode(
                         bottomSheetStatus,
                         appDrawerButtonState,
                         homeLauncherButtonState,
@@ -168,6 +170,23 @@ class MainActivity : ComponentActivity() {
         )
         {
             Column(
+                modifier = Modifier.combinedClickable(
+                    enabled = true,
+                    onClick = {
+                        topAppBarState.value = false
+                        bottomBarState.value = false
+                        Toast
+                            .makeText(context, "Disabling Top App and Bottom Bars", Toast.LENGTH_SHORT)
+                            .show()
+                    },
+                    onDoubleClick = {
+                        topAppBarState.value = true
+                        bottomBarState.value = true
+                        Toast
+                            .makeText(context, "Enabling Top App and Bottom Bars", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -217,7 +236,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     @OptIn(ExperimentalMaterial3Api::class)
-    private fun TopAppBar(
+    private fun TopAppBarMode(
         devicePolicyManager: DevicePolicyManager,
         context: ComponentActivity,
         lockTaskStatus: MutableState<Boolean>,
@@ -451,7 +470,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun BottomAppBar(
+    private fun BottomAppBarMode(
         bottomSheetStatus: MutableState<Boolean>,
         appDrawerButtonState: MutableState<Boolean>,
         homeLauncherButtonState: MutableState<Boolean>,
