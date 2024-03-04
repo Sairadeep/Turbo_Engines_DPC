@@ -1,5 +1,7 @@
 package com.weguard.turboengines
 
+import android.Manifest
+import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -63,6 +65,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -129,7 +133,8 @@ fun TEDPC(navController: NavController) {
                     appDrawerButtonState,
                     homeLauncherButtonState,
                     topAppBarState,
-                    bottomBarState
+                    bottomBarState,
+                    context
                 )
             }
         }
@@ -239,14 +244,14 @@ private fun TopAppBarMode(
 
             Spacer(modifier = Modifier.width(3.dp))
 
-//                HomeLauncher(
-//                    filter,
-//                    buttonState,
-//                    context,
-//                    devicePolicyManager,
-//                    componentName,
-//                    custom
-//                )
+//          HomeLauncher(
+//              filter,
+//              buttonState,
+//              context,
+//              devicePolicyManager,
+//              componentName,
+//              custom
+//            )
 
             LockDevice(lockDeviceStatus, contextAsComponentActivity, navController)
 
@@ -310,6 +315,7 @@ private fun toggleLockTaskMode(
     contextAsComponentActivity: ComponentActivity,
     lockTaskButtonText: MutableState<String>
 ) {
+
     if (devicePolicyManager.isLockTaskPermitted(context.packageName)) {
 
         lockTaskStatus.value = !(lockTaskStatus.value)
@@ -318,11 +324,13 @@ private fun toggleLockTaskMode(
 
             true -> {
                 contextAsComponentActivity.startLockTask()
+                Utils.setLockStatusValue(1)
                 lockTaskButtonText.value = "Exit Lock Task Mode"
             }
 
             false -> {
                 contextAsComponentActivity.stopLockTask()
+                Utils.setLockStatusValue(0)
                 lockTaskButtonText.value = "Enable Lock Task Mode"
             }
         }
@@ -480,8 +488,10 @@ private fun BottomAppBarMode(
     appDrawerButtonState: MutableState<Boolean>,
     homeLauncherButtonState: MutableState<Boolean>,
     topAppBarState: MutableState<Boolean>,
-    bottomBarState: MutableState<Boolean>
+    bottomBarState: MutableState<Boolean>,
+    context: ComponentActivity,
 ) {
+
     BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
@@ -510,6 +520,28 @@ private fun BottomAppBarMode(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
+            }
+            IconButton(onClick = {
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CALL_PHONE
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Permission to be prompted
+                    ActivityCompat.requestPermissions(
+                        context as Activity,
+                        arrayOf(Manifest.permission.CALL_PHONE),
+                        100
+                    )
+                } else {
+                    Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_question_mark_24),
+                    contentDescription = "Phone permission"
+                )
             }
         }
     }
