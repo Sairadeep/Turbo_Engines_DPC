@@ -103,6 +103,12 @@ fun TEDPC(navController: NavController) {
     val componentName = ComponentName(context, TEAdminReceiver::class.java)
     val appPackages = arrayListOf<String>()
 
+    if(devicePolicyManager.isDeviceOwnerApp("com.weguard.turboengines")){
+        Log.d("DPMState","Allowed")
+    }else{
+        Log.d("DPMState","Not allowed")
+    }
+
     CheckLockTaskAndAllowlistOfApps(
         appsCount,
         appPackages,

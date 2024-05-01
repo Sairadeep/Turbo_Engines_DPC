@@ -16,6 +16,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +40,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private val filter = IntentFilter()
     private val deviceLockStateReceiver = DeviceLockStateReceiver()
     private val contextAsComponentActivity = this@MainActivity as ComponentActivity
-    private val callerLaunch =
+    private val callerLaunch: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 //            Activity.RESULT_CANCELED => result.resultCode = 0
             if (result.resultCode == Activity.RESULT_CANCELED) {
@@ -67,7 +68,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-        if (gyroscope != null) {
+        if (gyroscope != null && accelerometer != null) {
             Toast.makeText(
                 this@MainActivity,
                 "Gyroscope and Accelerometer sensors exists...!",
@@ -92,10 +93,18 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         gyroscope?.let { gyroscopeSensor ->
-            sensorManager.registerListener(this, gyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL)
+            sensorManager.registerListener(
+                this,
+                gyroscopeSensor,
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
         }
         accelerometer?.let { accelerometerSensor ->
-            sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_UI)
+            sensorManager.registerListener(
+                this,
+                accelerometerSensor,
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
         }
     }
 
@@ -114,9 +123,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         // This time stamp delta rotation to be multiplied by the current rotation
         // after computing it from the gyro sample data.
         if (event != null) {
-
             when (event.sensor) {
-
                 gyroscope -> {
                     // Axis of the rotation sample, not normalized yet.
                     var axisX: Float = event.values[0]
@@ -161,7 +168,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     gravity[2] = alpha * gravity[2] + ((1 - alpha) * event.values[2])
                     Log.d("gravity Z-Axis", "${gravity[2]}")
 
-                    // Remove the gravity contribution with the high-pass filter.
+                    // Remove the gravity contribution with the high-pass filter
+                    // -> linearAcceleration = acceleration - acceleration due to gravity
                     linearAcceleration[0] = event.values[0] - gravity[0]
                     Log.d("Acceleration X-Axis", "${linearAcceleration[0]}")
                     linearAcceleration[1] = event.values[1] - gravity[1]
@@ -169,8 +177,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     linearAcceleration[2] = event.values[2] - gravity[2]
                     Log.d("Acceleration Z-Axis", "${linearAcceleration[2]}")
 
+                    val magnitude =
+                        sqrt((linearAcceleration[0] * linearAcceleration[0] + linearAcceleration[1] * linearAcceleration[1] + linearAcceleration[2] * linearAcceleration[2]).toDouble())
+
+                    Log.d("AcceleratorMagnitude", "$magnitude")
+
                     if (linearAcceleration[1] < fallThreshold) {
-                        Log.d("linearAcceleration", "${linearAcceleration[2]}")
+                        Log.d("linearAcceleration", "${linearAcceleration[1]}")
                         Utils.setAccelerometerDetection(1)
                         callStatus = true
                     } else {
@@ -201,6 +214,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 startActivity(intent)
                 callStatus = false
             }
+        } else {
+            Toast.makeText(this@MainActivity, "Safe", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -221,7 +236,6 @@ fun Navigation() {
     NavHost(navController = navController, startDestination = "HomePage") {
 
 //   Add Navigation Structure using composable functions
-
         composable(route = "HomePage") {
             TEDPC(navController)
         }
