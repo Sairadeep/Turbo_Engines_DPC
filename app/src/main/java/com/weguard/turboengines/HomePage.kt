@@ -9,6 +9,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.CountDownTimer
+import android.provider.Settings
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -70,7 +73,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalFoundationApi::class)
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun TEDPC(navController: NavController) {
 
@@ -79,10 +82,12 @@ fun TEDPC(navController: NavController) {
 //    adb shell dpm remove-active-admin com.weguard.turboengines/.TEAdminReceiver
 
     val context = LocalContext.current
+    val telephony = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 //  val buttonState = remember { mutableStateOf(true) }
     val bottomSheetStatus = remember {
         mutableStateOf(false)
     }
+    lateinit var timer: CountDownTimer
     val lockTaskButtonText = remember { mutableStateOf("Enable Lock Task Mode") }
     val lockTaskStatus = remember { mutableStateOf(false) }
     val lockDeviceStatus = remember { mutableStateOf(false) }
@@ -102,12 +107,54 @@ fun TEDPC(navController: NavController) {
         context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
     val componentName = ComponentName(context, TEAdminReceiver::class.java)
     val appPackages = arrayListOf<String>()
+    timer = object : CountDownTimer(600000, 120000) {
+        override fun onTick(millisUntilFinished: Long) {
+            devicePolicyManager.setNetworkLoggingEnabled(componentName, true)
+            Log.d(
+                "NetworkLogStatus",
+                devicePolicyManager.isNetworkLoggingEnabled(componentName).toString()
+            )
+            val networkLogs = devicePolicyManager.retrieveNetworkLogs(componentName, 0)
+            Log.d("NetworkLogStatus", "${networkLogs.toString()} ${millisUntilFinished / 60000}")
+            if (networkLogs != null) {
+                for (log in networkLogs) {
+                    Log.d("NetworkLogStatus", log.toString())
+                }
+            } else {
+                Log.d("NetworkLogStatus", "No logs")
+            }
+        }
+
+        override fun onFinish() {
+            timer.cancel()
+        }
+
+    }
+    timer.start()
+
+    if (devicePolicyManager.isAdminActive(componentName)) {
+        Log.d("AdminAvailableNActive", "Admin is active")
+        Log.d(
+            "Admin_pendingSystemUpdate",
+            "${devicePolicyManager.getPendingSystemUpdate(componentName)}"
+        )
+//        Log.d("Device_OS", Build.DEVICE)
+//        Log.d("Device_ID", Build.ID)
+//        Log.d("Device_SKU",Build.SKU)
+    } else {
+        Log.d("AdminAvailableNActive", "Admin is not active")
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+        intent.putExtra(DevicePolicyManager.ACTION_DEVICE_OWNER_CHANGED, componentName)
+        context.startActivity(intent)
+    }
 
     if(devicePolicyManager.isDeviceOwnerApp("com.weguard.turboengines")){
         Log.d("DPMState","Allowed")
     }else{
         Log.d("DPMState","Not allowed")
     }
+
 
     CheckLockTaskAndAllowlistOfApps(
         appsCount,
@@ -128,7 +175,8 @@ fun TEDPC(navController: NavController) {
                     lockTaskButtonText,
                     lockDeviceStatus,
                     componentName,
-                    navController
+                    navController,
+                    telephony
                 )
             }
         },
@@ -219,6 +267,7 @@ private fun CheckLockTaskAndAllowlistOfApps(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun TopAppBarMode(
@@ -229,7 +278,8 @@ private fun TopAppBarMode(
     lockTaskButtonText: MutableState<String>,
     lockDeviceStatus: MutableState<Boolean>,
     componentName: ComponentName,
-    navController: NavController
+    navController: NavController,
+    telephony: TelephonyManager
 ) {
     TopAppBar(
         title = { Text(text = "Turbo Engines", fontSize = 24.sp) },
@@ -264,6 +314,156 @@ private fun TopAppBarMode(
             Spacer(modifier = Modifier.width(3.dp))
 
             Reboot(devicePolicyManager, componentName)
+
+//            Log.d("DeviceInfo_SKU", Build.SKU)
+//            Log.d("DeviceInfo_ID", Build.ID)
+//            Log.d("DeviceInfo_", Build.DEVICE)
+//            Log.d("DeviceInfo_BASE_OS", Build.VERSION.BASE_OS)
+//            Log.d("DeviceInfo_HOST", Build.HOST)
+//            Log.d("DeviceInfo_Board", Build.BOARD)
+//            Log.d("DeviceInfo_BootLoader", Build.BOOTLOADER)
+//            Log.d("DeviceInfo_Brand", Build.BRAND)
+//            Log.d("DeviceInfo_Display", Build.DISPLAY)
+//            Log.d("DeviceInfo_FingerPrint", Build.FINGERPRINT)
+//            Log.d("DeviceInfo_Hardware", Build.HARDWARE)
+//            Log.d("DeviceInfo_MFG", Build.MANUFACTURER)
+////    Log.d("DeviceInfo_ODM_SKU", Build.ODM_SKU)
+//            Log.d("DeviceInfo_Product", Build.PRODUCT)
+////   java.lang.NoSuchFieldError: No field SOC_MODEL of type Ljava/lang/String; in class Landroid/os/Build; or its superclasses (declaration of 'android.os.Build' appears in /system/framework/framework.jar!classes2.dex)
+////    Log.d("DeviceInfo_SOC_MODEL", Build.SOC_MODEL)
+////    Log.d("DeviceInfo_SOC_MFG", Build.SOC_MANUFACTURER)
+//            Log.d("DeviceInfo_Tags", Build.TAGS)
+//            Log.d("DeviceInfo_User", Build.USER)
+//            Log.d("DeviceInfo_Get_Radio_Version", Build.getRadioVersion())
+////    Log.d("DeviceInfo_Get_Serial", Build.getSerial())
+//            Log.d("DeviceInfo_32_Bits", Build.SUPPORTED_32_BIT_ABIS.contentToString())
+//            Log.d("DeviceInfo_64_Bits", Build.SUPPORTED_64_BIT_ABIS.contentToString())
+//            Log.d("DeviceInfo_Time", Build.TIME.toString())
+//            Log.d("DeviceInfo_Supported_ABIs", Build.SUPPORTED_ABIS.contentToString())
+//            Log.d("DeviceInfo_Model", Build.MODEL)
+//            val partitions = Build.getFingerprintedPartitions()[1]
+//            Log.d("DeviceInfo_FingerPrint_Partitions", partitions.name)
+////    Log.d("DeviceInfo_", Build.UNKNOWN)
+//
+//            Log.d("DeviceInfo_Telephony_networkCountryIso", telephony.networkCountryIso)
+//            Log.d("DeviceInfo_Telephony_networkOperator", telephony.networkOperator)
+////    java.lang.NoSuchMethodError: No virtual method getPrimaryImei()Ljava/lang/String
+////    Log.d("DeviceInfo_Telephony_primaryImei", telephony.primaryImei)
+//            Log.d("DeviceInfo_Telephony_simSerialNumber", telephony.simSerialNumber)
+//            Log.d("DeviceInfo_Telephony_Network_Specifier", telephony.networkSpecifier)
+//            telephony.manufacturerCode?.let { Log.d("DeviceInfo_Telephony_Mfg_Code", it) }
+////            java.lang.NoSuchMethodError: No virtual method getManualNetworkSelectionPlmn()
+////            Log.d(
+////                "DeviceInfo_Telephony_Manual_Network_Selection_Plmn",
+////                telephony.manualNetworkSelectionPlmn
+////            )
+////            Log.d(
+////                "DeviceInfo_Telephony_Manual_Network_Selection_Plmn",
+////                telephony.manualNetworkSelectionPlmn
+////            )
+//            Log.d("DeviceInfo_Telephony_meid", telephony.meid)
+//            Log.d("DeviceInfo_Telephony_mmsUAProfURL", telephony.mmsUAProfUrl)
+//            Log.d("DeviceInfo_Telephony_mmsUserAgent", telephony.mmsUserAgent)
+//            if (telephony.nai != null) {
+//                Log.d("DeviceInfo_Telephony_nai", telephony.nai)
+//            } else {
+//                Log.d("DeviceInfo_Telephony_nai", "NA")
+//            }
+//            Log.d("DeviceInfo_Telephony_Network_Operator_Name", telephony.networkOperatorName)
+//            Log.d("DeviceInfo_Telephony_simCountryISO", telephony.simCountryIso)
+//            Log.d("DeviceInfo_Telephony_sim_operator", telephony.simOperatorName)
+//            Log.d("DeviceInfo_Telephony_simOperator", telephony.simOperator)
+//            Log.d("DeviceInfo_Telephony_subscriberID", telephony.subscriberId)
+//            Log.d("DeviceInfo_Settings_Secure_ANDROID_ID", Settings.Secure.ANDROID_ID)
+//            Log.d("DeviceInfo_Settings_Secure_Name", Settings.Secure.NAME)
+//            Log.d("DeviceInfo_Settings_Secure_Default_Input_Method", Settings.Secure.DEFAULT_INPUT_METHOD)
+//            Log.d("DeviceInfo_Settings_Secure_Accessibility_Enabled", Settings.Secure.ACCESSIBILITY_ENABLED)
+//            Log.d("DeviceInfo_Settings_Secure_Enabled_InputMethods", Settings.Secure.ENABLED_INPUT_METHODS)
+//            Log.d("DeviceInfo_Settings_Show_Settings_APN", Settings.ACTION_SETTINGS)
+//            Log.d("DeviceInfo_Settings_Show_NFC", Settings.ACTION_DEVICE_INFO_SETTINGS)
+//            Log.d("DeviceInfo_Settings_Show_Settings_For_DataSaver", Settings.ACTION_ADD_ACCOUNT)
+//            telephony.typeAllocationCode?.let {
+//                Log.d(
+//                    "DeviceInfo_Telephony_Type_Allocation_Code",
+//                    it
+//                )
+//            }
+////            Log.d(
+////                "DeviceInfo_Telephony_getIccAuthentication", telephony.getIccAuthentication(
+////                    1,
+////                    TelephonyManager.AUTHTYPE_EAP_SIM,
+////                    1.toString()
+////                )
+////            )
+//            telephony.getManufacturerCode(1)
+//                ?.let { Log.d("DeviceInfo_Telephony_Manufacturer_Code@1", it) }
+//            Log.d("DeviceInfo_Telephony_getMeid@1", telephony.getMeid(1))
+////            java.lang.NoSuchMethodError: No virtual method getActiveModemCount()
+////            Log.d("DeviceInfo_Telephony_ActiveModemCount", telephony.activeModemCount.toString())
+////            java.lang.NoSuchMethodError: No virtual method getCallComposerStatus()
+////            Log.d("DeviceInfo_Telephony_Call_Composer_Status", telephony.callComposerStatus.toString())
+//            Log.d(
+//                "DeviceInfo_Telephony_cardID_ForDefault_Euicc",
+//                telephony.cardIdForDefaultEuicc.toString()
+//            )
+//            Log.d(
+//                "DeviceInfo_Telephony_CarrierID_From_Sim_MccMnc",
+//                telephony.carrierIdFromSimMccMnc.toString()
+//            )
+//            Log.d(
+//                "DeviceInfo_Telephony_Data_Activity",
+//                telephony.dataActivity.toString()
+//            )
+//            Log.d("DeviceInfo_Telephony_Data_State", telephony.dataState.toString())
+//            Log.d(
+//                "DeviceInfo_Telephony_Is_Concurrent_VoiceAndData_Supported",
+//                telephony.isConcurrentVoiceAndDataSupported.toString()
+//            )
+////            java.lang.NoSuchMethodError: No virtual method isDataCapable()
+////            Log.d("DeviceInfo_Telephony_Is_Data_Capable", telephony.isDataCapable.toString())
+//            Log.d(
+//                "DeviceInfo_Telephony_Is_HearingAid_Compatibility_Supported",
+//                telephony.isHearingAidCompatibilitySupported.toString()
+//            )
+////            java.lang.NoSuchMethodError: No virtual method isManualNetworkSelectionAllowed()
+////            Log.d(
+////                "DeviceInfo_Telephony_Is_Manual_NetworkSelection_Allowed",
+////                telephony.isManualNetworkSelectionAllowed.toString()
+////            )
+//            Log.d("DeviceInfo_Telephony_Is_Network_Roaming", telephony.isNetworkRoaming.toString())
+//            Log.d("DeviceInfo_Telephony_Is_Rtt_Supported", telephony.isRttSupported.toString())
+//            Log.d("DeviceInfo_Telephony_Is_SMS_Capable", telephony.isSmsCapable.toString())
+//            Log.d("DeviceInfo_Telephony_Is_Voice_Capable", telephony.isVoiceCapable.toString())
+//            Log.d("DeviceInfo_Telephony_Is_World_Phone", telephony.isWorldPhone.toString())
+////            java.lang.NoSuchMethodError: No virtual method getNetworkSelectionMode()
+////            Log.d("DeviceInfo_Telephony_Network_Selection_Mode", telephony.networkSelectionMode.toString())
+////            java.lang.NoSuchMethodError: No virtual method getPhoneAccountHandle()
+////            Log.d("DeviceInfo_Telephony_Phone_Account_Handle", telephony.phoneAccountHandle.toString())
+//            Log.d("DeviceInfo_Telephony_Phone_Type", telephony.phoneType.toString())
+//            Log.d("DeviceInfo_Telephony_Sim_Carrier_Id", telephony.simCarrierId.toString())
+//            Log.d("DeviceInfo_Telephony_Sim_CarrierId_Name", telephony.simCarrierIdName.toString())
+//            Log.d(
+//                "DeviceInfo_Telephony_Sim_Specific_CarrierId",
+//                telephony.simSpecificCarrierId.toString()
+//            )
+//            Log.d(
+//                "DeviceInfo_Telephony_Sim_Specific_CarrierId_Name",
+//                telephony.simSpecificCarrierIdName.toString()
+//            )
+//            Log.d("DeviceInfo_Telephony_Sim_State", telephony.simState.toString())
+////            java.lang.NoSuchMethodError: No virtual method getSubscriptionId()
+////            Log.d("DeviceInfo_Telephony_Subscription_Id", telephony.subscriptionId.toString())
+////            java.lang.NoSuchMethodError: No virtual method getSupportedModemCount()
+////            Log.d("DeviceInfo_Telephony_Supported_Modem_Count", telephony.supportedModemCount.toString())
+//            Log.d(
+//                "DeviceInfo_Telephony_Supported_Radio_Access_Family",
+//                telephony.supportedRadioAccessFamily.toString()
+//            )
+////            java.lang.SecurityException: Caller does not have permission. Though 'READ_PHONE_STATE and 'READ_PRIVELAGE_PHONE_STATE' permission are provided
+////            Log.d("DeviceInfo_Telephony_Uicc_Cards_Info", telephony.uiccCardsInfo.toString())
+////    Log.d("DeviceInfo_Telephony_Clear_Signal_Strength_Update_Request",
+////        telephony.clearSignalStrengthUpdateRequest().toString()
+////    )
         }
     )
 }
